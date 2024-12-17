@@ -2,10 +2,18 @@ package org.example.controllers
 import java.util.*
 
 fun main() {
-    val scanner = Scanner(System.`in`)
-    val preusBillets = mutableListOf<Double>()
-    menuBillets(preusBillets)
-    pagar(preusBillets)
+    val scanner = abrirScanner()
+    val preusBillets = mutableListOf<Pair<String, Double>>()  // Lista para almacenar los billetes comprados
+    menuBillets(preusBillets, scanner)
+    cerrarScanner(scanner)
+}
+
+fun abrirScanner(): Scanner {
+    return Scanner(System.`in`)
+}
+
+fun cerrarScanner(scanner: Scanner) {
+    scanner.close()
 }
 
 fun mostrarMenu() {
@@ -19,18 +27,17 @@ fun mostrarMenu() {
     print("Posa la teva opcio: ")
 }
 
-fun menuBillets(preusBillets: MutableList<Double>) {
-    val scanner = Scanner(System.`in`)
+fun menuBillets(preusBillets: MutableList<Pair<String, Double>>, scanner: Scanner) {
     var continuar = true
     while (continuar) {
         mostrarMenu()
         val opcio = scanner.nextInt()
         when (opcio) {
-            1 -> elegirTipusBillet("Billet senzill", 2.40, preusBillets)
-            2 -> elegirTipusBillet("TCasual", 11.35, preusBillets)
-            3 -> elegirTipusBillet("TUsual", 40.00, preusBillets)
-            4 -> elegirTipusBillet("TFamiliar", 10.00, preusBillets)
-            5 -> elegirTipusBillet("TJove", 80.00, preusBillets)
+            1 -> elegirTipusBillet("Billet senzill", 2.40, preusBillets, scanner)
+            2 -> elegirTipusBillet("TCasual", 11.35, preusBillets, scanner)
+            3 -> elegirTipusBillet("TUsual", 40.00, preusBillets, scanner)
+            4 -> elegirTipusBillet("TFamiliar", 10.00, preusBillets, scanner)
+            5 -> elegirTipusBillet("TJove", 80.00, preusBillets, scanner)
             6 -> {
                 println("Adeu, que tingui un bon dia.")
                 continuar = false
@@ -43,8 +50,7 @@ fun menuBillets(preusBillets: MutableList<Double>) {
 /**
  * Funció per seleccionar la zona i obtenir el preu final del bitllet.
  */
-fun elegirZona(preuBase: Double): Pair<Int, Float> {
-    val scanner = Scanner(System.`in`)
+fun elegirZona(preuBase: Double, scanner: Scanner): Pair<Int, Float> {
     println("De quantes zones vols el bitllet?")
     println("1-Zona 1")
     println("2-Zona 2")
@@ -68,20 +74,19 @@ fun elegirZona(preuBase: Double): Pair<Int, Float> {
 /**
  * Funció per seleccionar el tipus de bitllet i calcular el preu segons la zona.
  */
-fun elegirTipusBillet(tipusBillet: String, preuBase: Double, preusBillets: MutableList<Double>) {
-    val (zona, preuFinal) = elegirZona(preuBase)
+fun elegirTipusBillet(tipusBillet: String, preuBase: Double, preusBillets: MutableList<Pair<String, Double>>, scanner: Scanner) {
+    val (zona, preuFinal) = elegirZona(preuBase, scanner)
     println("Has escollit el $tipusBillet per a la Zona $zona.")
     println("El preu del bitllet és $preuFinal€.")
 
-    preusBillets.add(preuFinal.toDouble())
-    mesBillets(preusBillets)
+    preusBillets.add(Pair("$tipusBillet (Zona $zona)", preuFinal.toDouble()))
+    mesBillets(preusBillets, scanner)
 }
 
 /**
  * Funció per preguntar si l'usuari vol continuar comprant.
  */
-fun mesBillets(preusBillets: MutableList<Double>) {
-    val scanner = Scanner(System.`in`)
+fun mesBillets(preusBillets: MutableList<Pair<String, Double>>, scanner: Scanner) {
     var seguirComprant = 0
     var continuar = true
 
@@ -91,28 +96,73 @@ fun mesBillets(preusBillets: MutableList<Double>) {
 
         if (resposta.equals("SI", ignoreCase = true)) {
             seguirComprant++
-            if (seguirComprant >= 3) {
-                println("Error: Has superat el límit. Esperi a l'operari.")
-                continuar = false // Finaliza el bucle al superar el límite
+            if (seguirComprant >= 3) {  // Limitar a 3 compras
+                println("Has arribat al límit de compres. El procés es deté.")
+                continuar = false  // Detener el ciclo de compra
             } else {
                 println("Tornant al menú principal...")
-                return
+                menuBillets(preusBillets, scanner)  // Volver al menú principal
+                continuar = false  // Salir del ciclo actual para que no siga pidiendo más compras
             }
         } else if (resposta.equals("NO", ignoreCase = true)) {
-            println("Gràcies per la teva compra! Fins aviat.")
-            continuar = false
+            pagar(preusBillets, scanner)  // Proceder al pago
+            continuar = false  // Terminar el ciclo de compra
         } else {
             println("Resposta no vàlida. Torna a intentar-ho.")
         }
     }
 }
 
-fun pagar(preciosBilletes: List<Double>) {
-    val total = preciosBilletes.sum() // Suma tots els preus
-    println("Resum de la compra:")
-    preciosBilletes.forEachIndexed { index, preu ->
-        println("Billet ${index + 1}: $preu€")
-    }
+fun pagar(preusBillets: List<Pair<String, Double>>, scanner: Scanner) {
+    val total = preusBillets.sumOf { it.second }  // Sumar los precios de todos los billetes
     println("El total a pagar és: $total€.")
-    println("Gràcies per la teva compra! Fins aviat.")
+
+    val monedasValidas = listOf(0.05, 0.10, 0.20, 0.50, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0)
+    var pago = 0.0
+
+    while (pago < total) {
+        println("Introdueix una moneda o bitllet vàlid:")
+        val moneda = scanner.nextDouble()
+
+        if (monedasValidas.contains(moneda)) {
+            pago += moneda
+            println("Has introduït: $moneda€. Total pagat: $pago€.")
+        } else {
+            println("Moneda no vàlida. Torna a intentar-ho.")
+        }
+    }
+
+    if (pago > total) {
+        val canvi = pago - total
+        println("Has pagat més del necessari. El teu canvi és: $canvi€.")
+    }
+
+    // Llamada a la función ticket para mostrar el recibo
+    ticket(preusBillets, scanner)
+}
+
+/**
+ * Funció per mostrar el tiquet de les compres realitzades.
+ */
+fun ticket(preusBillets: List<Pair<String, Double>>, scanner: Scanner) {
+    println("Vols tiquet? (Sí/No)")
+    val resposta = scanner.next()
+
+    if (resposta.equals("SI", ignoreCase = true)) {
+        println("_______TIQUET_______")
+        var total = 0.0
+        // Imprimir cada tiquet y su precio
+        for ((tipus, preu) in preusBillets) {
+            println("$tipus - $preu€")
+            total += preu
+        }
+        println("_____________________")
+        println("Total a pagar: $total€")
+        println("Gràcies per la seva compra!")
+    } else {
+        println("Gràcies per la seva compra.")
+    }
+
+    // Volver al menú principal después de mostrar el tiquet
+    menuBillets(preusBillets, scanner)
 }
