@@ -1,123 +1,118 @@
 package org.example.controllers
 import java.util.*
 
-fun main(){
-    val scanner= Scanner(System.`in`)
-    menuBilletes()
+fun main() {
+    val scanner = Scanner(System.`in`)
+    val preusBillets = mutableListOf<Double>()
+    menuBillets(preusBillets)
+    pagar(preusBillets)
 }
+
 fun mostrarMenu() {
     println("Premi el billet que vol adquirir:")
-    println("1-Billet sencill")
+    println("1-Billet senzill")
     println("2-TCasual")
     println("3-TUsual")
     println("4-TFamiliar")
     println("5-TJove")
     println("6-Nah res nomes miraba")
-    print("Posa la teva opcio:")
+    print("Posa la teva opcio: ")
 }
-fun menuBilletes(){
-    val scanner= Scanner(System.`in`)
-    mostrarMenu()
-    var continuar= true
-    while(continuar){
-        val opcio= scanner.nextInt()
-        when(opcio){
-            1-> sencill()
-            2-> tCasual()
-            3-> mostrarMenu()
-            4-> mostrarMenu()
-            5-> mostrarMenu()
-            6-> {
+
+fun menuBillets(preusBillets: MutableList<Double>) {
+    val scanner = Scanner(System.`in`)
+    var continuar = true
+    while (continuar) {
+        mostrarMenu()
+        val opcio = scanner.nextInt()
+        when (opcio) {
+            1 -> elegirTipusBillet("Billet senzill", 2.40, preusBillets)
+            2 -> elegirTipusBillet("TCasual", 11.35, preusBillets)
+            3 -> elegirTipusBillet("TUsual", 40.00, preusBillets)
+            4 -> elegirTipusBillet("TFamiliar", 10.00, preusBillets)
+            5 -> elegirTipusBillet("TJove", 80.00, preusBillets)
+            6 -> {
                 println("Adeu, que tingui un bon dia.")
-                continuar=false
+                continuar = false
             }
-            else-> {
-                println("Opcio no disponible, torna a escollir una:")
-
-
-            }
+            else -> println("Opció no disponible, torna a escollir una:")
         }
     }
 }
 
-fun mostrarMenuZona() {
-    println("De cuantes zones?:")
+/**
+ * Funció per seleccionar la zona i obtenir el preu final del bitllet.
+ */
+fun elegirZona(preuBase: Double): Pair<Int, Float> {
+    val scanner = Scanner(System.`in`)
+    println("De quantes zones vols el bitllet?")
     println("1-Zona 1")
     println("2-Zona 2")
     println("3-Zona 3")
-    println("4-Tornar a escollir billet")
-    print("Posa la teva opcio:")
+    print("Posa la teva opció: ")
+
+    val zona = scanner.nextInt()
+
+    val preuFinal = when (zona) {
+        1 -> preuBase.toFloat()
+        2 -> (preuBase * 1.3125).toFloat()
+        3 -> (preuBase * 1.8443).toFloat()
+        else -> {
+            println("Zona no vàlida. Seleccionant Zona 1 per defecte.")
+            preuBase.toFloat()
+        }
+    }
+    return Pair(zona, preuFinal)
 }
 
-fun sencill(){
-    val scanner= Scanner(System.`in`)
-    mostrarMenuZona()
+/**
+ * Funció per seleccionar el tipus de bitllet i calcular el preu segons la zona.
+ */
+fun elegirTipusBillet(tipusBillet: String, preuBase: Double, preusBillets: MutableList<Double>) {
+    val (zona, preuFinal) = elegirZona(preuBase)
+    println("Has escollit el $tipusBillet per a la Zona $zona.")
+    println("El preu del bitllet és $preuFinal€.")
 
-    var continuar= true
-    while(continuar){
-        val opcio= scanner.nextInt()
-        val (preuZona1, preuZona2, preuZona3) = calcularPreu(2.40)
-        when(opcio){
-            1-> println("Billet sencill, Zona1\nEl preu del billet es $preuZona1€")
-            2-> println("Billet sencill, Zona2\nEl preu del billet es $preuZona2€")
-            3-> println("Billet sencill, Zona3\nEl preu del billet es $preuZona3€")
-            4-> return mostrarMenu()
+    preusBillets.add(preuFinal.toDouble())
+    mesBillets(preusBillets)
+}
 
-        }
+/**
+ * Funció per preguntar si l'usuari vol continuar comprant.
+ */
+fun mesBillets(preusBillets: MutableList<Double>) {
+    val scanner = Scanner(System.`in`)
+    var seguirComprant = 0
+    var continuar = true
+
+    while (continuar) {
         println("Vols continuar comprant? (Sí/No):")
         val resposta = scanner.next()
-        if (resposta=="SI"|| resposta == "si" || resposta == "Si"){
-            return mostrarMenu()
 
-        }else if (resposta == "No" || resposta == "no" || resposta == "NO") {
-            continuar = false
+        if (resposta.equals("SI", ignoreCase = true)) {
+            seguirComprant++
+            if (seguirComprant >= 3) {
+                println("Error: Has superat el límit. Esperi a l'operari.")
+                continuar = false // Finaliza el bucle al superar el límite
+            } else {
+                println("Tornant al menú principal...")
+                return
+            }
+        } else if (resposta.equals("NO", ignoreCase = true)) {
             println("Gràcies per la teva compra! Fins aviat.")
-        }
-    }
-}
-fun tCasual(){
-    val scanner= Scanner(System.`in`)
-    mostrarMenuZona()
-
-    var continuar= true
-
-    while(continuar){
-        val opcio= scanner.nextInt()
-        val (preuZona1, preuZona2, preuZona3) = calcularPreu(11.35)
-        when(opcio){
-            1-> println("Billet Tcasual, Zona1\nEl preu del billet es $preuZona1€")
-            2-> println("Billet Tcasual, Zona2\nEl preu del billet es $preuZona2€")
-            3-> println("Billet Tcasual, Zona3\nEl preu del billet es $preuZona3€")
-            4-> return mostrarMenu()
-
-        }
-    }
-    mesBillets()
-}
-fun calcularPreu(preuZona1: Double): Triple<Float, Float, Float> {
-    val preu = preuZona1.toFloat()
-    val preuZona2 = (preuZona1 * 1.3125).toFloat()
-    val preuZona3 = (preuZona1 * 1.8443).toFloat()
-    return Triple(preu, preuZona2, preuZona3)
-}
-fun mesBillets(){
-    val scanner= Scanner(System.`in`)
-    println("Vols continuar comprant? (Sí/No):")
-    var seguirCompran= 0
-    var continuar= true
-    val resposta = scanner.next()
-    if (resposta=="SI"|| resposta == "si" || resposta == "Si"){
-        seguirCompran++
-        if (seguirCompran>=3){
-            println("Error: Esperi a l'operari")
             continuar = false
-        }else {
-            mostrarMenu()
+        } else {
+            println("Resposta no vàlida. Torna a intentar-ho.")
         }
-
-    }else if (resposta == "No" || resposta == "no" || resposta == "NO") {
-        continuar = false
-        println("Gràcies per la teva compra! Fins aviat.")
     }
+}
 
+fun pagar(preciosBilletes: List<Double>) {
+    val total = preciosBilletes.sum() // Suma tots els preus
+    println("Resum de la compra:")
+    preciosBilletes.forEachIndexed { index, preu ->
+        println("Billet ${index + 1}: $preu€")
+    }
+    println("El total a pagar és: $total€.")
+    println("Gràcies per la teva compra! Fins aviat.")
 }
